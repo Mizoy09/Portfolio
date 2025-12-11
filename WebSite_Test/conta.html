@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registro e Login</title>
+<style>
+html, body { margin:0; height:100%; font-family:Inter, Roboto, Arial, sans-serif; color:#222; background:#f6f7f9; line-height:1.3; }
+body { display:flex; align-items:center; justify-content:center; }
+.form-card { background:#fff; border:1px solid #e3e6ea; border-radius:8px; padding:28px 32px; width:320px; box-shadow:0 2px 10px rgba(0,0,0,0.03); }
+.form-card h2 { margin:0 0 16px 0; font-size:18px; font-weight:700; text-align:center; }
+label { display:block; font-size:14px; font-weight:600; margin-bottom:6px; }
+input[type="text"], input[type="password"] { width:100%; padding:10px 12px; border:1px solid #e1e4e8; border-radius:6px; margin-bottom:16px; font-size:14px; transition:border-color .2s, box-shadow .2s; }
+input[type="text"]:focus, input[type="password"]:focus { border-color:#0070f3; box-shadow:0 0 0 2px rgba(0,112,243,0.15); outline:none; }
+.btn { width:100%; padding:10px 12px; background:#0070f3; color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer; transition: background .2s; }
+.btn:hover { background:#0059c9; }
+.toggle-btn { margin-top:10px; background:#eee; color:#333; }
+.message { text-align:center; margin-bottom:12px; font-weight:600; }
+.voltar { text-align:center; margin-top:10px; }
+.voltar a { color:#0070f3; text-decoration:none; }
+.voltar a:hover { text-decoration:underline; }
+</style>
+</head>
+<body>
+
+<div class="form-card">
+  <h2 id="form-title">Registrar-se</h2>
+  <div class="message" id="msg"></div>
+  <form id="user-form">
+    <label for="fname">Nome:</label>
+    <input type="text" id="fname" name="fname" required>
+    <label for="senha">Senha:</label>
+    <input type="password" id="senha" name="senha" required>
+    <input type="hidden" name="action" id="action" value="register">
+    <button class="btn" type="submit" id="submit-btn">Registrar</button>
+  </form>
+  <button class="btn toggle-btn" id="toggle-btn">Já tenho conta</button>
+  <div class="voltar"><p><a href="index.php">Voltar à página inicial</a></p></div>
+</div>
+
+<script>
+const toggleBtn = document.getElementById('toggle-btn');
+const formTitle = document.getElementById('form-title');
+const submitBtn = document.getElementById('submit-btn');
+const msgEl = document.getElementById('msg');
+const actionInput = document.getElementById('action');
+const form = document.getElementById('user-form');
+
+let isRegister = true;
+
+// переключение между регистрацией и входом
+toggleBtn.addEventListener('click', () => {
+    isRegister = !isRegister;
+    if (isRegister) {
+        formTitle.textContent = "Registrar-se";
+        submitBtn.textContent = "Registrar";
+        toggleBtn.textContent = "Já tenho conta";
+        actionInput.value = "register";
+        msgEl.textContent = "";
+    } else {
+        formTitle.textContent = "Entrar";
+        submitBtn.textContent = "Login";
+        toggleBtn.textContent = "Criar conta";
+        actionInput.value = "login";
+        msgEl.textContent = "";
+    }
+});
+
+// обработка формы
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fname = document.getElementById('fname').value.trim();
+    const senha = document.getElementById('senha').value.trim();
+    const action = actionInput.value;
+
+    if (!fname || !senha) {
+        msgEl.style.color = 'red';
+        msgEl.textContent = "Preencha todos os campos!";
+        return;
+    }
+
+    const response = await fetch('auth.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: `fname=${encodeURIComponent(fname)}&senha=${encodeURIComponent(senha)}&action=${encodeURIComponent(action)}`
+    });
+
+    const result = await response.text();
+
+    if (result === 'ok') {
+        if (action === 'login') {
+            window.location.href = 'index.php'; // <-- исправлено
+        } else {
+            msgEl.style.color = 'green';
+            msgEl.textContent = "Conta criada! Agora entre.";
+            form.reset();
+        }
+    } else if (result === 'exists') {
+        msgEl.style.color = 'red';
+        msgEl.textContent = "Esse nome de usuário já existe.";
+    } else {
+        msgEl.style.color = 'red';
+        msgEl.textContent = "Isso é um problema.";
+    }
+});
+</script>
+
+</body>
+</html>
